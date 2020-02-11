@@ -1,7 +1,10 @@
 ---
 title: "HashiCorp Home Cluster"
 layout: post
-date: 2020-02-10
+date: 2020-02-11
+draft: true
+tags:
+- draft
 ---
 <center><img src="/images/hashilogo.webp" alt="HashiCorp" class="avatar" /></center>
 <br />
