@@ -6,14 +6,12 @@ draft: true
 tags:
 - draft
 ---
-<center><img src="/images/hashilogo.webp" alt="HashiCorp" class="avatar" /></center>
-<br />
-
+<img src="/images/hashilogo.png" height="250" style="float: right;" alt="HashiCorp" class="avatar" />
 It's been a hot minute (as my teenager daughter says it) since I started at HashiCorp as a developer on the Terraform Cloud team (we are [hiring like crazy](https://grnh.se/896abd501) btw) and while the firehose at work has soaked me completely - I hadn't had much exposure to many of the other HashiCorp Products other than [Packer](https://packer.io/).
 
 Turns out we eat a lot of our own dogfood at Hashi and the devops flow that folks like I use to get code into production utilizes Hashi products under the hood. After asking dumb question after dumb question internally about how things worked, I figured it would be a better idea to learn the products themselves. And what better way to do that than run them at home?
 
-<center><img src="/images/rpi-intensifies.gif" alt="Raspberry Pi Intensifies" class="avatar" /></center>
+<img src="/images/rpi-intensifies.gif" alt="Raspberry Pi Intensifies" class="avatar" style="float: left; padding: 4px; padding-right: 15px;" />
 
 Most of the devices on my home network are already <s>frankensteined </s> provisioned for other purposes and configuration of those felt like it would be more of a challenge so I went and got a bunch of Raspberry Pis instead and networked them all together. This is the story of how that all went down.
 
@@ -49,6 +47,8 @@ So at this point, I have the following hardware:
 
 All of these are sitting nicely behind my monitor on my desk using a shared power supply.
 
+<img src="/images/cluster.jpg" alt="cluster" />
+
 # Software
 
 I read a lot about using Kubernetes or a smaller variation like k3s on the Raspberry Pi cluster, but frankly, it seemed like a huge learning curve given where I work. I can jump into a Slack channel and immediately have access to amazing developers working on HashiCorp's own workload orchestrator [Nomad](https://www.nomadproject.io/). And trust me, I did ask tons of questions.
@@ -83,22 +83,42 @@ Consul is great for DNS and service discovery, but when paired with Nomad and Tr
 
 You simply add a Nomad job and Consul discovers it and starts listing it in the catalog.  Traefik sees the new record in the catalog and makes it routable instantaneously.
 
-For example, this Nomad job [homeassistant.nomad](https://github.com/veverkap/pistuff/blob/master/jobs/homeassistant.nomad):
+For example, I run an internal [Docker registry](https://hub.docker.com/_/registry) so that I can have Docker images with custom code in them.  Setting that up was seriously easy.
 
-<iframe src="https://gist.github.com/veverkap/e90ea33256e74542a27bd874b296a6d2.pibb" frameborder="0" scrolling="yes" width="100%"></iframe>
+I created this Nomad job [docker-registry.nomad](https://github.com/veverkap/pistuff/blob/master/jobs/docker-registry.nomad):
+
+<script src="https://gist.github.com/veverkap/e90ea33256e74542a27bd874b296a6d2.js"></script>
 <hr>
 
-Runs on Nomad like this:
+You upload that via the Web-UI or the CLI to Nomad and it plans a job, making sure that it can allocate this successfully:
 
-<center><img src="/images/nomadjob.png" alt="Nomad job webui"></center>
+<center><img src="/images/jobplan.png" alt="Nomad job webui"></center>
+<hr>
+After you click Run, it applies the job and gets the job running:
+
+<center><img src="/images/apply.png" alt="Nomad job webui"></center>
+<hr>
+
+After the allocation is complete, you can see the job running on the client detail page:
+
+<center><img src="/images/nomad-running.png" alt="Nomad job webui"></center>
+<hr />
+
+Consul picks that up and creates a service which it publishes
+
+<center><img src="/images/consul-nomad-job.png" alt="Nomad job webui"></center>
+<hr />
 
 And is automagically turned into this on Traefik:
 
-<center><img src="/images/traefik-homeassistant.png" alt="traefik dashboard"></center>
+<center><img src="/images/traefik-dockerregistry.png" alt="traefik dashboard"></center>
+<hr />
 
-And then I can hit homeassistant.domain.com and see this:
+Now I have an internal Docker registry running with no real configuration done - it is all HashiCorp magic.
 
-<center><img src="/images/homeassistant.png" alt="homeassistant dashboard"></center>
+Let's see how I could use that registry:
+
+<script id="asciicast-xTde3SMDh1uB1ovgeruwsMj37" data-size="small" data-rows="30" src="https://asciinema.org/a/xTde3SMDh1uB1ovgeruwsMj37.js" async></script>
 
 I have configured three of the servers (rpi1, rpi2 and rpi3) to act as Consul servers and all of the pis are running the Consul client as well.  This allows them to see each other via DNS (rp*.node.consul) instead of having to configure /etc/hosts or some sort of DNS config on each box manually.
 
@@ -117,7 +137,10 @@ You can run nomad cli locally and schedule jobs via the command line or you can 
 
 ## Traefik
 
-<center><img src="/images/traefik.png" height="200" alt="Traefik Logo" class="avatar" /></center>
+<img src="/images/traefik.png" height="200" alt="Traefik Logo" style="float: left;" class="avatar" />
+So it's really neat that all of this Consul + Nomad goodness automatically sets up stuff, but I don't want to have to remember that the docker registry lives on rpi1.node.consul:15213 now (or have to update links later when I redeploy and it ends up on rpi4.node.local:15343).
+
+To make these jobs routable with something more memorable, I have setup an instance of [Traefik](https://containo.us/traefik/) to act as a reverse proxy and edge router. Bonus points - it [automatically integrates with Consul](https://docs.traefik.io/providers/consul-catalog/) to create HTTP and TCP services from the Consul catalog that I already have running.
 
 Originally, I had planned on using [kibatic/ansible-traefik](https://github.com/kibatic/ansible-traefik) but this role has not yet been updated to Traefik 2.0, which has LOTS of goodies in it that I didn't want to miss out on. I plan on going back shortly and opening a PR to add 2.0 support to that role. Traefik 2.0 is able to dynamically generate ACME TLS certifications with Let's Encrypt and the middleware support that handles authentication is amazing.
 
