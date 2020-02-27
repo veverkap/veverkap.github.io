@@ -3,6 +3,8 @@ title: "HashiCorp Home Cluster"
 layout: post
 date: 2020-02-26
 draft: true
+tags:
+- draft
 ---
 <img src="/images/hashilogo.png" height="250" style="float: right;" alt="HashiCorp" class="avatar" />
 It's been a hot minute (as my teenager daughter says it) since I started at HashiCorp as a developer on the Terraform Cloud team (we are [hiring like crazy](https://grnh.se/896abd501) btw) and while the firehose at work has soaked me completely - I hadn't had much exposure to many of the other HashiCorp Products other than [Packer](https://packer.io/).
