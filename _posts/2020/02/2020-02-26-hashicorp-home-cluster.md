@@ -82,7 +82,7 @@ You simply add a Nomad job and Consul discovers it and starts listing it in the 
 
 For example, I run an internal [Docker registry](https://hub.docker.com/_/registry) so that I can have Docker images with custom code in them.  Setting that up was seriously easy.
 
-I created this Nomad job [docker-registry.nomad](https://github.com/veverkap/pistuff/blob/master/jobs/docker-registry.nomad):
+I created this Nomad job [docker-registry.job](https://github.com/veverkap/pistuff/blob/master/jobs/docker-registry.job):
 
 <script src="https://gist.github.com/veverkap/e90ea33256e74542a27bd874b296a6d2.js"></script>
 <hr>
